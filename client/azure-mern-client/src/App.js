@@ -65,7 +65,6 @@ class App extends React.Component {
   render() {
     return (
       <div>
-        <div>this is running</div>
         <ul>
           {
             Object.keys(this.state.bestShows).map((cur, idx) => (
