@@ -2,6 +2,7 @@ import React from "react";
 import axios from 'axios';
 import "./index.css";
 
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -15,7 +16,7 @@ class App extends React.Component {
     axios.get('/api/data')
       .then(res => {
         console.log("data recieved: ", res.data);
-        this.setState({ bestShows: res.data[0] });
+        this.setState({ bestShows: res.data });
       })
       .catch(alert);
   }
@@ -28,9 +29,15 @@ class App extends React.Component {
         Full Controle MF!
         <ul>
           {
-            Object.keys(this.state.bestShows).map((cur, idx) => (
-              <li>{cur} - {this.state.bestShows[cur]} </li>
-            ))
+          
+
+              Object.keys(this.state.bestShows).map((key, i) => (
+                Object.keys(this.state.bestShows[key]).map((cur, idx) => (
+                  <li>{cur} - {this.state.bestShows[key][cur]} </li>
+                ))
+              ))
+
+    
           }
         </ul>
       </div>
