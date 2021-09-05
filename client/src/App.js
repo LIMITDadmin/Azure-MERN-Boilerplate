@@ -12,43 +12,62 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 
+
+
 function createData(name, calories, fat, carbs, protein) {
   return { name, calories, fat, carbs, protein };
 }
 
-const rowsy = [
-  createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-  createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-  createData('Eclair', 262, 16.0, 24, 6.0),
-  createData('Cupcake', 305, 3.7, 67, 4.3),
-  createData('Gingerbread', 356, 16.0, 49, 3.9),
-];
+function cellSet(day) {
+  return [
+  <TableCell style={cellStyle(day)} align="left">{day}</TableCell>,
+  <TableCell style={cellStyle(day)} align="left" onClick={(e)=>{alert("hi "+day+" x: "+e.screenX+" y:"+e.screenY)}}>...</TableCell>
+  ]
+}
 
-function DenseTable() {
+
+function cellStyle(weekday){
+  return (weekday.includes("Sa") || weekday.includes("So")) ? {backgroundColor: 'lightgrey'}:{}
+}
+
+function DenseTable({value:rowsy}) {
   const classes = useStyles();
+  const colSpanTop = 2;
 
   return (
     <TableContainer component={Paper}>
       <Table className={classes.table} size="small" aria-label="a dense table">
         <TableHead>
           <TableRow>
-            <TableCell colSpan={2}>Dessert (100g serving)</TableCell>
-            <TableCell align="right">Calories</TableCell>
-            <TableCell align="right">Fat&nbsp;(g)</TableCell>
-            <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-            <TableCell align="right">Protein&nbsp;(g)</TableCell>
+            <TableCell colSpan={colSpanTop}>Januar</TableCell>
+            <TableCell colSpan={colSpanTop}>Februar</TableCell>
+            <TableCell colSpan={colSpanTop}>März</TableCell>
+            <TableCell colSpan={colSpanTop}>April</TableCell>
+            <TableCell colSpan={colSpanTop}>Mai</TableCell>
+            <TableCell colSpan={colSpanTop}>Juni</TableCell>
+            <TableCell colSpan={colSpanTop}>Juli</TableCell>
+            <TableCell colSpan={colSpanTop}>August</TableCell>
+            <TableCell colSpan={colSpanTop}>September</TableCell>
+            <TableCell colSpan={colSpanTop}>Oktober</TableCell>
+            <TableCell colSpan={colSpanTop}>November</TableCell>
+            <TableCell colSpan={colSpanTop}>Dezember</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {rowsy.map((row) => (
-            <TableRow key={row.name}>
-              <TableCell component="th" scope="row">
-                {row.name}
-              </TableCell>
-              <TableCell align="right">{row.calories}</TableCell>
-              <TableCell align="right" onClick={()=>alert("huhu")}>{row.fat}</TableCell>
-              <TableCell align="right">{row.carbs}</TableCell>
-              <TableCell align="right">{row.protein}</TableCell>
+            <TableRow key={row.id}>
+             {cellSet(row.Jan)}
+             {cellSet(row.Feb)}
+             {cellSet(row.Mar)}
+             {cellSet(row.Apr)}
+             {cellSet(row.May)}
+             {cellSet(row.Jun)}
+             {cellSet(row.Jul)}
+             {cellSet(row.Aug)}
+             {cellSet(row.Sep)}
+             {cellSet(row.Oct)}
+             {cellSet(row.Nov)}
+             {cellSet(row.Dec)}
             </TableRow>
           ))}
         </TableBody>
@@ -63,15 +82,6 @@ const useStyles = makeStyles({
   },
 });
 
-function componentDidMount() {
-  console.log("componentDidMount success")
-  axios.get('/api/data')
-    .then(res => {
-      console.log("data recieved: ", res.data);
-      this.setState({ bestShows: res.data });
-    })
-    .catch(alert);
-}
 
 
 class App extends React.Component {
@@ -111,7 +121,7 @@ class App extends React.Component {
         
         cells.push(value);
       }
-      rows.push( { id: cells[0], Jan: cells[1], Feb: cells[2], Mar: cells[3], Apr: cells[4], May: cells[5], Jun: cells[6], Jul: cells[7], Aug: cells[8], Sep: cells[9], Oct: cells[10], Nov: cells[11], Dec: cells[12]})
+      rows.push( { id: cells[0], Jan:cells[1], Feb: cells[2], Mar: cells[3], Apr: cells[4], May: cells[5], Jun: cells[6], Jul: cells[7], Aug: cells[8], Sep: cells[9], Oct: cells[10], Nov: cells[11], Dec: cells[12]})
     }
 
     /*for (var d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -123,11 +133,6 @@ class App extends React.Component {
       rows.push( { id: r, title: daysOfYear[r].toLocaleDateString() })
       
     }*/
-
-   
-    
-   
-
   
 
     this.state = {
@@ -163,14 +168,30 @@ class App extends React.Component {
     };
   }
 
+
+  btnPush (){
+    var rowCpy =  JSON.parse(JSON.stringify(this.state.rows));
+    //rowCpy[1]["Jan"] = "Got ya"; no copy needed
+    this.state.rows[1]["Jan"] = "Got ya";
+    this.setState({rows:this.state.rows});
+  }
   
+   componentDidMount() {
+    console.log("componentDidMount success")
+    axios.get('/api/data')
+      .then(res => {
+        console.log("data recieved: ", res.data);
+        this.setState({ bestShows: res.data });
+      })
+      .catch(alert);
+  }
 
   render() {
     console.log("render bestShows: ", this.state.bestShows)
     return (
       <div>
-        Full Controle MF! HUHU
-        <DataGrid columns={this.state.columns} rows={this.state.rows} />
+        <Button onClick={()=>{this.btnPush()}}> push me </Button>
+       <DenseTable value={this.state.rows}/>
         <ul>
           {
           
@@ -182,12 +203,11 @@ class App extends React.Component {
               ))
 
     
-          }
+                }
         </ul>
-        <Button variant="contained" color="primary">
-      Hello World
-    </Button>
-    <DenseTable/>
+        
+       
+
       </div>
     );
   }
