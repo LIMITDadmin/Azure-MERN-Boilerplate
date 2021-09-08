@@ -11,6 +11,7 @@ const ReadPreference = require('mongodb').ReadPreference;
 
 //var url = "mongodb+srv://<username>:<password>@<cluster>-vgz77.azure.mongodb.net/test?retryWrites=true&w=majority";
 var url = "mongodb://cosmo-limitd:1ucTvssvrmgTZk4Y2XlTazV6gqLzg8XIEgEmEemaGq0xgBz0f7TjdGC5RfB5jpC24gpbA8xlDsxy7GP6Shf4Fg==@cosmo-limitd.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@cosmo-limitd@"
+
 router.use(bodyParser.urlencoded({ extended: true }));
 router.get('/', (req, res, next) => {
 	MongoClient.connect(url, function(err, db) {
@@ -29,7 +30,7 @@ router.get('/', (req, res, next) => {
 
 router.put('/hero', (req, res) => { // create
 	const { id, type, date, desc, desc_long } = req.body;
-	const hero = new Hero({ id, type, date, desc, desc_long });
+	const hero = new Hero({  type, date, desc, desc_long });
 	hero
 		.save()
 		.then(() => {
