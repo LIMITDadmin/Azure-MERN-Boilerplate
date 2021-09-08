@@ -11,17 +11,35 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
+import Chip from '@material-ui/core/Chip';
+import { spacing } from '@material-ui/system';
 
 
+const theme = {
+  spacing: 0,
+  padding: 0,
+}
 
 function createData(name, calories, fat, carbs, protein) {
   return { name, calories, fat, carbs, protein };
 }
 
-function cellSet(day) {
+function cellSet(day, val) {
+  var chips = [];
+
+  if(val != null){
+    for(var i=0;i<val.length;i++){
+      chips.push(<Chip  p={0} color="primary" size="small" label={val[i]}/>)
+    }
+  }
   return [
-  <TableCell style={cellStyle(day)} align="left">{day}</TableCell>,
-  <TableCell style={cellStyle(day)} align="left" onClick={(e)=>{alert("hi "+day+" x: "+e.screenX+" y:"+e.screenY)}}>...</TableCell>
+
+    <TableCell style={cellStyle(day)}  p={0} align="left" onClick={(e)=>{alert("hi "+day+" x: "+e.screenX+" y:"+e.screenY)}}>
+    {day}
+    </TableCell>,
+  <TableCell style={cellStyle(day)}  p={0} align="left" onClick={(e)=>{alert("hi "+day+" x: "+e.screenX+" y:"+e.screenY)}}>
+    {chips}
+    </TableCell>
   ]
 }
 
@@ -38,36 +56,36 @@ function DenseTable({value:rowsy}) {
     <TableContainer component={Paper}>
       <Table className={classes.table} size="small" aria-label="a dense table">
         <TableHead>
-          <TableRow>
-            <TableCell colSpan={colSpanTop}>Januar</TableCell>
-            <TableCell colSpan={colSpanTop}>Februar</TableCell>
-            <TableCell colSpan={colSpanTop}>März</TableCell>
-            <TableCell colSpan={colSpanTop}>April</TableCell>
-            <TableCell colSpan={colSpanTop}>Mai</TableCell>
-            <TableCell colSpan={colSpanTop}>Juni</TableCell>
-            <TableCell colSpan={colSpanTop}>Juli</TableCell>
-            <TableCell colSpan={colSpanTop}>August</TableCell>
-            <TableCell colSpan={colSpanTop}>September</TableCell>
-            <TableCell colSpan={colSpanTop}>Oktober</TableCell>
-            <TableCell colSpan={colSpanTop}>November</TableCell>
-            <TableCell colSpan={colSpanTop}>Dezember</TableCell>
+          <TableRow p={0} >
+            <TableCell p={0} colSpan={colSpanTop}>Januar</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>Februar</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>März</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>April</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>Mai</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>Juni</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>Juli</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>August</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>September</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>Oktober</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>November</TableCell>
+            <TableCell p={0} colSpan={colSpanTop}>Dezember</TableCell>
           </TableRow>
         </TableHead>
-        <TableBody>
+        <TableBody p={0} >
           {rowsy.map((row) => (
-            <TableRow key={row.id}>
-             {cellSet(row.Jan)}
-             {cellSet(row.Feb)}
-             {cellSet(row.Mar)}
-             {cellSet(row.Apr)}
-             {cellSet(row.May)}
-             {cellSet(row.Jun)}
-             {cellSet(row.Jul)}
-             {cellSet(row.Aug)}
-             {cellSet(row.Sep)}
-             {cellSet(row.Oct)}
-             {cellSet(row.Nov)}
-             {cellSet(row.Dec)}
+            <TableRow p={0} key={row.id}>
+             {cellSet(row.Jan,row.Jan_val)}
+             {cellSet(row.Feb,row.Feb_val)}
+             {cellSet(row.Mar,row.Mar_val)}
+             {cellSet(row.Apr, row.Apr_val)}
+             {cellSet(row.May,row.May_val)}
+             {cellSet(row.Jun,row.Jun_val)}
+             {cellSet(row.Jul,row.Jul_val)}
+             {cellSet(row.Aug,row.Aug_val)}
+             {cellSet(row.Sep,row.Sep_val)}
+             {cellSet(row.Oct,row.Oct_val)}
+             {cellSet(row.Nov,row.Nov_val)}
+             {cellSet(row.Dec,row.Dec_val)}
             </TableRow>
           ))}
         </TableBody>
@@ -83,6 +101,20 @@ const useStyles = makeStyles({
 });
 
 
+const month_config = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr", 
+  "May", 
+  "Jun", 
+  "Jul", 
+  "Aug", 
+  "Sep", 
+  "Oct", 
+  "Nov", 
+  "Dec"
+];
 
 class App extends React.Component {
   constructor(props) {
@@ -121,7 +153,33 @@ class App extends React.Component {
         
         cells.push(value);
       }
-      rows.push( { id: cells[0], Jan:cells[1], Feb: cells[2], Mar: cells[3], Apr: cells[4], May: cells[5], Jun: cells[6], Jul: cells[7], Aug: cells[8], Sep: cells[9], Oct: cells[10], Nov: cells[11], Dec: cells[12]})
+      rows.push( { 
+        id: cells[0], 
+        Jan:cells[1], 
+        Feb: cells[2], 
+        Mar: cells[3], 
+        Apr: cells[4], 
+        May: cells[5], 
+        Jun: cells[6], 
+        Jul: cells[7], 
+        Aug: cells[8], 
+        Sep: cells[9], 
+        Oct: cells[10], 
+        Nov: cells[11], 
+        Dec: cells[12],
+        Jan_val: [], 
+        Feb_val: [], 
+        Mar_val: [], 
+        Apr_val: [], 
+        May_val: [], 
+        Jun_val: [], 
+        Jul_val: [], 
+        Aug_val: [], 
+        Sep_val: [], 
+        Oct_val: [], 
+        Nov_val: [], 
+        Dec_val: [],
+      })
     }
 
     /*for (var d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -137,34 +195,7 @@ class App extends React.Component {
 
     this.state = {
       bestShows: [],
-      rows : rows,
-      columns : [
-        { key: 'id', name: 'ID' , width: 10},
-        { key: 'Jan', name: 'Januar', colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Jan_val', name: '',  width: 170},
-        { key: 'Feb', name: 'Februar',colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Feb_val', name: '', width: 170 },
-        { key: 'Mar', name: 'März' ,colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Mar_val', name: '' },
-        { key: 'Apr', name: 'April' ,colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Apr_val', name: '' },
-        { key: 'May', name: 'Mai' ,colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'May_val', name: '' },
-        { key: 'Jun', name: 'Juni' ,colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Jun_val', name: '' },
-        { key: 'Jul', name: 'Juli' ,colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Jul_val', name: '' },
-        { key: 'Aug', name: 'August',colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Aug_val', name: '' },
-        { key: 'Sep', name: 'September' ,colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Sep_val', name: '' },
-        { key: 'Oct', name: 'Oktober',colSpan(args) { if (args.type === 'HEADER') {return 2;}} },
-        { key: 'Oct_val', name: '' },
-        { key: 'Nov', name: 'November' ,colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Nov_val', name: '' },
-        { key: 'Dec', name: 'Dezember' ,colSpan(args) { if (args.type === 'HEADER') {return 2;}}},
-        { key: 'Dec_val', name: '' },
-      ]
+      rows : rows
     };
   }
 
@@ -175,6 +206,7 @@ class App extends React.Component {
     this.state.rows[1]["Jan"] = "Got ya";
     this.setState({rows:this.state.rows});
   }
+
   
    componentDidMount() {
     console.log("componentDidMount success")
@@ -182,8 +214,17 @@ class App extends React.Component {
       .then(res => {
         console.log("data recieved: ", res.data);
         this.setState({ bestShows: res.data });
+        this.state.bestShows.forEach(
+          (value, index)=>{
+          var dat = new Date(value["date"])
+          this.state.rows[dat.getDate()][month_config[dat.getMonth()]+"_val"].push(value["desc"])
+          console.log("gefunden, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+value["desc"])
+        })
+        console.log("changed after load: "+this.state.rows)
+      this.setState({rows:this.state.rows});
       })
       .catch(alert);
+      
   }
 
   render() {
