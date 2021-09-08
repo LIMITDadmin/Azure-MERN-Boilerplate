@@ -42,6 +42,7 @@ router.post('/hero', (req, res) => {//update
 
 	Hero.findOne({ id })
 		.then(hero => {
+		hero.id = id;
 		hero.type = type;
 		hero.date = date;
 		hero.desc = desc;
