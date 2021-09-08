@@ -1,7 +1,7 @@
 
 var express = require('express');
 var router = express.Router();
-const Hero = require('./model');
+const Hero = require('./HeroModel');
 
 var MongoClient = require('mongodb').MongoClient;
 const ReadPreference = require('mongodb').ReadPreference;
