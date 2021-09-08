@@ -30,16 +30,18 @@ router.get('/', (req, res, next) => {
 
 router.put('/hero', (req, res) => { // create
 	const { id, type, date, desc, desc_long } = req.body;
-	//const hero = new Hero({  type, date, desc, desc_long });
-	const hero = new Hero({  "type", date, "desc", "desc_long" });
-	hero
-		.save()
-		.then(() => {
-		res.json(hero);
-		})
-		.catch(err => {
-		res.status(500).send(err);
-		});
+	MongoClient.connect(url, function(err, db) {
+		if (err) throw err;
+		var dbo = db.db("admin");	
+		try{
+			dbo.collection("heros").insertOne(
+				{ type: type, date: date, desc: desc, desc_long: desc_long }
+			);
+		} catch (e) {
+			res.status(500).send(e);
+		 }
+	}); 
+
 });
 
 router.post('/hero', (req, res) => {//update
