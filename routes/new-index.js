@@ -35,7 +35,7 @@ router.put('/hero', (req, res) => { // create
 		var dbo = db.db("admin");	
 		try{
 			dbo.collection("heros").insertOne(
-				{ type: type, date: date, desc: desc, desc_long: desc_long }
+				{ type: type, date: date, desc: "here we go", desc_long: desc_long }
 			);
 		} catch (e) {
 			res.status(500).send(e);
