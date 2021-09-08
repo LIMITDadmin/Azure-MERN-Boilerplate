@@ -30,7 +30,8 @@ router.get('/', (req, res, next) => {
 
 router.put('/hero', (req, res) => { // create
 	const { id, type, date, desc, desc_long } = req.body;
-	const hero = new Hero({  type, date, desc, desc_long });
+	//const hero = new Hero({  type, date, desc, desc_long });
+	const hero = new Hero({  "type", date, "desc", "desc_long" });
 	hero
 		.save()
 		.then(() => {
