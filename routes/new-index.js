@@ -2,17 +2,20 @@
 var express = require('express');
 var router = express.Router();
 const Hero = require('./HeroModel');
+const bodyParser = require("body-parser")
+
+
 
 var MongoClient = require('mongodb').MongoClient;
 const ReadPreference = require('mongodb').ReadPreference;
 
 //var url = "mongodb+srv://<username>:<password>@<cluster>-vgz77.azure.mongodb.net/test?retryWrites=true&w=majority";
 var url = "mongodb://cosmo-limitd:1ucTvssvrmgTZk4Y2XlTazV6gqLzg8XIEgEmEemaGq0xgBz0f7TjdGC5RfB5jpC24gpbA8xlDsxy7GP6Shf4Fg==@cosmo-limitd.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&maxIdleTimeMS=120000&appName=@cosmo-limitd@"
-
+router.use(bodyParser.urlencoded({ extended: true }));
 router.get('/', (req, res, next) => {
 	MongoClient.connect(url, function(err, db) {
 		if (err) throw err;
-		var dbo = db.db("admin");
+		var dbo = db.db("admin");	
 		dbo.collection("heros").find({}).toArray(function(err, result) {
 			if (err) throw err;
 			console.log('Mongo data coming in hot')
@@ -42,7 +45,6 @@ router.post('/hero', (req, res) => {//update
 
 	Hero.findOne({ id })
 		.then(hero => {
-		hero.id = id;
 		hero.type = type;
 		hero.date = date;
 		hero.desc = desc;
