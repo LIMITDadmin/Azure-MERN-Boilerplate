@@ -35,9 +35,15 @@ router.put('/hero', (req, res) => { // create
 		if (err) throw err;
 		var dbo = db.db("admin");	
 		try{
-			dbo.collection("heros").insertOne(
-				{ type: type, date: date, desc:desc, desc_long: desc_long }
-			);
+			var result = dbo.collection("heros").insertOne(
+				{ type: type, date: date, desc:desc, desc_long: desc_long },
+				(err,result)=>{
+					console.log("received in PUT: "+result)
+					res.json(result);
+				}
+			); 
+			
+
 		} catch (e) {
 			res.status(500).send(e);
 		 }

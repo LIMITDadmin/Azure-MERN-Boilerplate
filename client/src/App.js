@@ -44,6 +44,16 @@ const useStyles = makeStyles((theme) => ({
   table: {
     minWidth: 650,
   },
+  TableCellSizeSmall: {
+    padding:"3px 1px 3px 1px",
+    fontsize: "0.875rem",
+    textalign: "left",
+     fontweight: 400,
+    lineheight: 1.43,
+    borderbottom: "1px solid rgba(224, 224, 224, 1)",
+    letterspacing: "0.01071em",
+    verticalalign: "inherit",
+  },
 }));
 
 const baseAPI = '/api/data';
@@ -65,7 +75,6 @@ var dialogAction = null;
   const setTypeVal = (val)=>{
     type = val
   }
-    
 
   const handleClickOpen = (year, month, day) => {
     day = parseInt(day);
@@ -100,11 +109,25 @@ var dialogAction = null;
             'Content-Type': 'application/json'
           }
         })
-          .then(result => result.json())
-          .then(json => resolve(json))
-          .catch(err => {
-            reject(err);
-          });
+        .then(response => response.json())
+        .then(data => console.log("DB Eintrag erfolgt, ID: "+data["insertedId"]))
+        .catch(err => {
+          reject(err);
+        });
+         
+            /*
+            {
+              "result":{"n":1,"ok":1},
+              "connection":{"id":1,"host":"cosmo-limitd.mongo.cosmos.azure.com","port":10255},
+              "ops":[{"type":"","date":"2021-07-09","desc":"kjkjkj","_id":"613fc9bbcc532698343af1a1"}],
+              "insertedCount":1,
+              "insertedId":"613fc9bbcc532698343af1a1",
+              "n":1,
+              "ok":1
+            }*/
+          
+          
+          
       });
     
     }
@@ -114,7 +137,7 @@ var dialogAction = null;
   return (
     <div>
      
-      <Dialog open={open} onClose={(addMilestone)=>{handleClose(addMilestone)}} aria-labelledby="form-dialog-title">
+      <Dialog open={open} onClose={handleCancel} aria-labelledby="form-dialog-title">
         <DialogTitle id="form-dialog-title">Subscribe</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -199,21 +222,25 @@ function createData(name, calories, fat, carbs, protein) {
   return { name, calories, fat, carbs, protein };
 }
 
-function cellSet(day, month, year, val) {
-  var chips = [];
+function handleDelete(){
 
+}
+
+function CellSet(day, month, year, val) {
+  var chips = [];
+  const classes = useStyles();
   if(val != null){
     for(var i=0;i<val.length;i++){
-      chips.push(<Chip  p={0} color="primary" size="small" label={val[i]}/>)
+      chips.push(<Chip  p={0} color="primary" size="small" label={val[i]}  onDelete={handleDelete}/>)
     }
   }
   return [
 
-    <TableCell style={cellStyle(day)}  p={0} align="left"  onClick={()=>{dialogAction(year,month,day)}}>
+    <TableCell className={ classes.TableCellSizeSmall} style={cellStyle(day)}  p={0} align="left"  onClick={()=>{dialogAction(year,month,day)}}>
     {day}
     </TableCell>,
 
-      <TableCell style={cellStyle(day)}  p={0} align="left" onClick={()=>{dialogAction(year,month,day)}}>
+      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day)}  p={0} align="left" onClick={()=>{dialogAction(year,month,day)}}>
     {chips}
     </TableCell>
   ]
@@ -221,7 +248,7 @@ function cellSet(day, month, year, val) {
 
 
 function cellStyle(weekday){
-  return (weekday.includes("Sa") || weekday.includes("So")) ? {backgroundColor: 'lightgrey'}:{}
+  return (weekday.includes("Sa") || weekday.includes("So")) ? {backgroundColor: 'lightgrey', whiteSpace: "nowrap"}:{whiteSpace: "nowrap"}
 }
 
 function DenseTable({value:rowsy}) {
@@ -230,38 +257,38 @@ function DenseTable({value:rowsy}) {
 
   return (
     <TableContainer component={Paper}>
-      <Table className={classes.table} size="small" aria-label="a dense table">
+      <Table size="small" aria-label="Milestone table">
         <TableHead>
           <TableRow p={0} >
-            <TableCell p={0} colSpan={colSpanTop}>Januar</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>Februar</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>März</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>April</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>Mai</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>Juni</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>Juli</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>August</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>September</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>Oktober</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>November</TableCell>
-            <TableCell p={0} colSpan={colSpanTop}>Dezember</TableCell>
+            <TableCell p={0}  style={{width: "8%"}}  colSpan={colSpanTop}>Januar</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Februar</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>März</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>April</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Mai</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Juni</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Juli</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>August</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>September</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Oktober</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>November</TableCell>
+            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Dezember</TableCell>
           </TableRow>
         </TableHead>
         <TableBody p={0} >
           {rowsy.map((row) => (
             <TableRow p={0} key={row.id}>
-             {cellSet(row.Jan,1,year,row.Jan_val)}
-             {cellSet(row.Feb,2,year,row.Feb_val)}
-             {cellSet(row.Mar,3, year,row.Mar_val)}
-             {cellSet(row.Apr,4,year, row.Apr_val)}
-             {cellSet(row.May,5,year,row.May_val)}
-             {cellSet(row.Jun,6,year,row.Jun_val)}
-             {cellSet(row.Jul,7,year,row.Jul_val)}
-             {cellSet(row.Aug,8,year,row.Aug_val)}
-             {cellSet(row.Sep,9,year,row.Sep_val)}
-             {cellSet(row.Oct,10,year,row.Oct_val)}
-             {cellSet(row.Nov,11,year,row.Nov_val)}
-             {cellSet(row.Dec,12,year,row.Dec_val)}
+             {CellSet(row.Jan,1,year,row.Jan_val)}
+             {CellSet(row.Feb,2,year,row.Feb_val)}
+             {CellSet(row.Mar,3, year,row.Mar_val)}
+             {CellSet(row.Apr,4,year, row.Apr_val)}
+             {CellSet(row.May,5,year,row.May_val)}
+             {CellSet(row.Jun,6,year,row.Jun_val)}
+             {CellSet(row.Jul,7,year,row.Jul_val)}
+             {CellSet(row.Aug,8,year,row.Aug_val)}
+             {CellSet(row.Sep,9,year,row.Sep_val)}
+             {CellSet(row.Oct,10,year,row.Oct_val)}
+             {CellSet(row.Nov,11,year,row.Nov_val)}
+             {CellSet(row.Dec,12,year,row.Dec_val)}
             </TableRow>
           ))}
         </TableBody>
