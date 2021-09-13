@@ -30,6 +30,7 @@ router.get('/', (req, res, next) => {
 
 router.put('/hero', (req, res) => { // create
 	const { id, type, date, desc, desc_long } = req.body;
+	console.log("bekomme in PUT "+req.body)
 	MongoClient.connect(url, function(err, db) {
 		if (err) throw err;
 		var dbo = db.db("admin");	
