@@ -63,7 +63,7 @@ const year = 2021;
 
 var dialogAction = null;
 
- function FormDialog({obj:addMilestone}) {
+ function FormDialog({obj:addMilestone, change:changeMilestone}) {
   const [open, setOpen] = React.useState(false);
   const desc = React.useRef("");
   const desc_long = React.useRef("");
@@ -71,6 +71,7 @@ var dialogAction = null;
   var type = "";
   const formattedDate = React.useRef("2022-01-01")
   const addM = addMilestone;
+  const chM = changeMilestone;
 
   const setTypeVal = (val)=>{
     type = val
@@ -222,36 +223,38 @@ function createData(name, calories, fat, carbs, protein) {
   return { name, calories, fat, carbs, protein };
 }
 
-function handleDelete(){
+function handleDelete(id){
+  console.log("wrong: "+id);
 
 }
 
-function CellSet(day, month, year, val) {
+function CellSet(day, month, year, val, deleteMilestone) {
   var chips = [];
   const classes = useStyles();
   if(val != null){
     for(var i=0;i<val.length;i++){
-      chips.push(<Chip  p={0} color="primary" size="small" label={val[i]}  onDelete={handleDelete}/>)
+      var id = val[i]["_id"]; 
+      chips.push(<Chip  p={0} color="primary" size="small" label={val[i]["desc"]}  onDelete={()=>deleteMilestone(id)}/>)
     }
   }
   return [
 
-    <TableCell className={ classes.TableCellSizeSmall} style={cellStyle(day)}  p={0} align="left"  onClick={()=>{dialogAction(year,month,day)}}>
+    <TableCell className={ classes.TableCellSizeSmall} style={cellStyle(day,false)}  p={0} align="left"  onClick={()=>{dialogAction(year,month,day)}}>
     {day}
     </TableCell>,
 
-      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day)}  p={0} align="left" onClick={()=>{dialogAction(year,month,day)}}>
+      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day,true)}  p={0} align="left" onClick={()=>{dialogAction(year,month,day)}}>
     {chips}
     </TableCell>
   ]
 }
 
 
-function cellStyle(weekday){
-  return (weekday.includes("Sa") || weekday.includes("So")) ? {backgroundColor: 'lightgrey', whiteSpace: "nowrap"}:{whiteSpace: "nowrap"}
+function cellStyle(weekday, isContentCol){
+  return (weekday.includes("Sa") || weekday.includes("So")) ? {backgroundColor: 'lightgrey', whiteSpace: (isContentCol ? "normal": "nowrap")}:{whiteSpace: (isContentCol ? "normal": "nowrap")}
 }
 
-function DenseTable({value:rowsy}) {
+function DenseTable({value:rowsy, delete:deleteMilestone}) {
   const classes = useStyles();
   const colSpanTop = 2;
 
@@ -277,18 +280,18 @@ function DenseTable({value:rowsy}) {
         <TableBody p={0} >
           {rowsy.map((row) => (
             <TableRow p={0} key={row.id}>
-             {CellSet(row.Jan,1,year,row.Jan_val)}
-             {CellSet(row.Feb,2,year,row.Feb_val)}
-             {CellSet(row.Mar,3, year,row.Mar_val)}
-             {CellSet(row.Apr,4,year, row.Apr_val)}
-             {CellSet(row.May,5,year,row.May_val)}
-             {CellSet(row.Jun,6,year,row.Jun_val)}
-             {CellSet(row.Jul,7,year,row.Jul_val)}
-             {CellSet(row.Aug,8,year,row.Aug_val)}
-             {CellSet(row.Sep,9,year,row.Sep_val)}
-             {CellSet(row.Oct,10,year,row.Oct_val)}
-             {CellSet(row.Nov,11,year,row.Nov_val)}
-             {CellSet(row.Dec,12,year,row.Dec_val)}
+             {CellSet(row.Jan,1,year,row.Jan_val,deleteMilestone)}
+             {CellSet(row.Feb,2,year,row.Feb_val,deleteMilestone)}
+             {CellSet(row.Mar,3, year,row.Mar_val,deleteMilestone)}
+             {CellSet(row.Apr,4,year, row.Apr_val,deleteMilestone)}
+             {CellSet(row.May,5,year,row.May_val,deleteMilestone)}
+             {CellSet(row.Jun,6,year,row.Jun_val,deleteMilestone)}
+             {CellSet(row.Jul,7,year,row.Jul_val,deleteMilestone)}
+             {CellSet(row.Aug,8,year,row.Aug_val,deleteMilestone)}
+             {CellSet(row.Sep,9,year,row.Sep_val,deleteMilestone)}
+             {CellSet(row.Oct,10,year,row.Oct_val,deleteMilestone)}
+             {CellSet(row.Nov,11,year,row.Nov_val,deleteMilestone)}
+             {CellSet(row.Dec,12,year,row.Dec_val,deleteMilestone)}
             </TableRow>
           ))}
         </TableBody>
@@ -323,66 +326,12 @@ class App extends React.Component {
     var startDate = new Date(2021, 0, 1);
     var endDate = new Date(2021, 11, 31);
     var daysOfYear = [];
-    const maxDaysInMonth = 31;
-    const year = 2021;
+   
 
     // cycle months, start new column for each month
    
   
-    var rows = [];
-    
-    var editedValue = "kein wert";
-    
-    //cycle through days, add new row for each day and empty strings until 31
-    for(var curDay = 1; curDay <= maxDaysInMonth; curDay ++){
-      var cells = [];
-      cells.push(curDay);
-      for (var curMonth = 0; curMonth < 12; curMonth ++) {
-          //get days in the month
-          var daysInMonth = new Date(year, curMonth+1, 0).getDate();
-          var value = "";
-        
-    
-        if (curDay <= daysInMonth){
-          //add date
-          var dateEntry = new Date(year,curMonth,curDay);
-          const options1 = { weekday: 'short'};
-          const options2 = { day: 'numeric' };
-          value = ""+dateEntry.toLocaleDateString('de-DE', options2)+" "+dateEntry.toLocaleDateString('de-DE', options1); 
-        }else{
-          //add empty string  
-        }
-        
-        cells.push(value);
-      }
-      rows.push( { 
-        id: cells[0], 
-        Jan:cells[1], 
-        Feb: cells[2], 
-        Mar: cells[3], 
-        Apr: cells[4], 
-        May: cells[5], 
-        Jun: cells[6], 
-        Jul: cells[7], 
-        Aug: cells[8], 
-        Sep: cells[9], 
-        Oct: cells[10], 
-        Nov: cells[11], 
-        Dec: cells[12],
-        Jan_val: [], 
-        Feb_val: [], 
-        Mar_val: [], 
-        Apr_val: [], 
-        May_val: [], 
-        Jun_val: [], 
-        Jul_val: [], 
-        Aug_val: [], 
-        Sep_val: [], 
-        Oct_val: [], 
-        Nov_val: [], 
-        Dec_val: [],
-      })
-    }
+    var rows = this.createRows();
 
     /*for (var d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
         daysOfYear.push(new Date(d));
@@ -407,6 +356,66 @@ class App extends React.Component {
   }
 
 
+  createRows() {
+    const maxDaysInMonth = 31;
+    const year = 2021;
+    var rows = [];
+
+    var editedValue = "kein wert";
+
+    //cycle through days, add new row for each day and empty strings until 31
+    for (var curDay = 1; curDay <= maxDaysInMonth; curDay++) {
+      var cells = [];
+      cells.push(curDay);
+      for (var curMonth = 0; curMonth < 12; curMonth++) {
+        //get days in the month
+        var daysInMonth = new Date(year, curMonth + 1, 0).getDate();
+        var value = "";
+
+
+        if (curDay <= daysInMonth) {
+          //add date
+          var dateEntry = new Date(year, curMonth, curDay);
+          const options1 = { weekday: 'short' };
+          const options2 = { day: 'numeric' };
+          value = "" + dateEntry.toLocaleDateString('de-DE', options2) + " " + dateEntry.toLocaleDateString('de-DE', options1);
+        } else {
+          //add empty string  
+        }
+
+        cells.push(value);
+      }
+      rows.push({
+        id: cells[0],
+        Jan: cells[1],
+        Feb: cells[2],
+        Mar: cells[3],
+        Apr: cells[4],
+        May: cells[5],
+        Jun: cells[6],
+        Jul: cells[7],
+        Aug: cells[8],
+        Sep: cells[9],
+        Oct: cells[10],
+        Nov: cells[11],
+        Dec: cells[12],
+        Jan_val: [],
+        Feb_val: [],
+        Mar_val: [],
+        Apr_val: [],
+        May_val: [],
+        Jun_val: [],
+        Jul_val: [],
+        Aug_val: [],
+        Sep_val: [],
+        Oct_val: [],
+        Nov_val: [],
+        Dec_val: [],
+      });
+    }
+    return rows;
+  }
+
   btnPush (){
     var rowCpy =  JSON.parse(JSON.stringify(this.state.rows));
     //rowCpy[1]["Jan"] = "Got ya"; no copy needed
@@ -428,25 +437,65 @@ class App extends React.Component {
       
   }
 
-   addMilestones = (milestone) => {
-    this.setState({ milestones: milestone });
-    this.state.milestones.forEach(
+
+
+   addMilestones = (milestone, isClearContent = false) => {
+    
+    var rowSet = []
+    if (isClearContent){
+      rowSet = this.createRows()
+    }else{
+      rowSet = this.state.rows
+    }
+    
+    milestone.forEach(
       (value, index)=>{
       var dat = new Date(value["date"])
-      this.state.rows[dat.getDate()][month_config[dat.getMonth()]+"_val"].push(value["desc"])
-      console.log("gefunden, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+value["desc"])
+      rowSet[dat.getDate()][month_config[dat.getMonth()]+"_val"].push(value)
+      console.log("gefunden, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+value["desc"]+"id: "+value["_id"])
     })
+    this.setState({ milestones: milestone, rows:rowSet });
   }
 
     addMilestone = (milestone) => {
       this.state.milestones.push(milestone);
       this.setState({ milestones: this.state.milestones });
       var dat = new Date(milestone["date"])
-      this.state.rows[dat.getDate()][month_config[dat.getMonth()]+"_val"].push(milestone["desc"])
+      this.state.rows[dat.getDate()][month_config[dat.getMonth()]+"_val"].push({_id:milestone["_id"], desc:milestone["desc"]})
       console.log("hinzugefügt, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+milestone["desc"])
 
       //this.addMilestones(this.state.milestones);
   }
+ 
+  deleteMilestone = (id) => {
+
+    console.log("now deleting: "+id+" with pointer: "+this.state.milestones.length)
+    var filteredMilestones =  this.state.milestones.filter(element => element._id != id)
+    this.addMilestones(filteredMilestones,true);
+    return new Promise((resolve, reject) => {
+      fetch(`${baseAPI}/hero/${id}`, { method: 'DELETE' })
+        .then(response => response.json())
+        .then(json => resolve(json))
+        .catch(err => {
+          reject(err);
+        });
+    });
+
+ }
+    
+    //this.state.milestones.push(milestone);
+    //id in milestones suchen
+    // löschen
+    // update
+    /*this.setState({ milestones: this.state.milestones });
+    var dat = new Date(milestone["date"])
+    this.state.rows[dat.getDate()][month_config[dat.getMonth()]+"_val"].push(milestone["desc"])
+    console.log("hinzugefügt, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+milestone["desc"])
+*/
+    //this.addMilestones(this.state.milestones);
+
+
+changeMilestone = (id) => {}
   
 
   render() {
@@ -455,7 +504,7 @@ class App extends React.Component {
       <div>
         <Button onClick={()=>{this.btnPush()}}> push me </Button>
     
-       <DenseTable value={this.state.rows}/>
+       <DenseTable value={this.state.rows} delete={(param)=>{this.deleteMilestone(param)}} />
       
         <ul>
           {
@@ -471,7 +520,7 @@ class App extends React.Component {
                 }
         </ul>
         
-       <FormDialog obj={(param)=>{this.addMilestone(param)}}/>
+       <FormDialog obj={(param)=>{this.addMilestone(param)}} change={(param)=>{this.changeMilestone(param)}} />
 
       </div> 
     );

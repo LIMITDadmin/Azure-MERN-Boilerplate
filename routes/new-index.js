@@ -40,6 +40,7 @@ router.put('/hero', (req, res) => { // create
 				(err,result)=>{
 					console.log("received in PUT: "+result)
 					res.json(result);
+					db.close();
 				}
 			); 
 			
@@ -69,15 +70,16 @@ router.post('/hero', (req, res) => {//update
 
 router.delete('/hero/:id', (req, res) => {//destroy
 	const { id } = req.params;
-
-	Hero.findOneAndRemove({ id })
-		.then(hero => {
-		res.json(hero);
-		})
-		.catch(err => {
-		res.status(500).send(err);
-		});
+	console.log("deleting ID: "+id)
+	MongoClient.connect(url, function(err, db) {
+		if (err) throw err;
+		var dbo = db.db("admin");	
+		try{
+			dbo.collection("heros").deleteOne( { "_id" : id } );
+		} catch (e) {
+			res.status(500).send(e);
+		}
+	});
 });
-
 
 module.exports = router;
