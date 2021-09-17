@@ -98,10 +98,8 @@ var dialogAction = null;
 
 
       return new Promise((resolve, reject) => {
-
-        var hero= {desc:desc.current.value,desc_long : desc_long.current.value, date :date.current.value, type:type}
-        addM(hero);
-        
+        var hero= { desc:desc.current.value,desc_long : desc_long.current.value, date :date.current.value, type:type}
+               
         fetch(`${baseAPI}/hero`, {
           method: 'PUT',
           body: JSON.stringify(hero),
@@ -111,7 +109,12 @@ var dialogAction = null;
           }
         })
         .then(response => response.json())
-        .then(data => console.log("DB Eintrag erfolgt, ID: "+data["insertedId"]))
+        .then((data) => {
+          let cb = addM;
+          let obj = {...hero}
+          console.log("DB Eintrag erfolgt, ID: "+data["ops"])
+           cb(data["ops"][0]); // first element of entered Values (we only enter one)
+        })
         .catch(err => {
           reject(err);
         });
@@ -219,9 +222,6 @@ const theme = {
   padding: 0,
 }
 
-function createData(name, calories, fat, carbs, protein) {
-  return { name, calories, fat, carbs, protein };
-}
 
 function handleDelete(id){
   console.log("wrong: "+id);
@@ -416,12 +416,6 @@ class App extends React.Component {
     return rows;
   }
 
-  btnPush (){
-    var rowCpy =  JSON.parse(JSON.stringify(this.state.rows));
-    //rowCpy[1]["Jan"] = "Got ya"; no copy needed
-    this.state.rows[1]["Jan"] = "Got ya";
-    this.setState({rows:this.state.rows});
-  }
 
   
    componentDidMount() {
@@ -438,6 +432,13 @@ class App extends React.Component {
   }
 
 
+  addRow = (value, rowSet) => {
+    var dat = new Date(value["date"])
+    rowSet[dat.getDate()-1][month_config[dat.getMonth()]+"_val"].push(value)
+    console.log("hinzugefügt, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+value["desc"]+"id: "+value["_id"])
+    return rowSet;
+  }
+
 
    addMilestones = (milestone, isClearContent = false) => {
     
@@ -450,21 +451,18 @@ class App extends React.Component {
     
     milestone.forEach(
       (value, index)=>{
-      var dat = new Date(value["date"])
-      rowSet[dat.getDate()][month_config[dat.getMonth()]+"_val"].push(value)
-      console.log("gefunden, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+value["desc"]+"id: "+value["_id"])
+        rowSet = this.addRow(value, rowSet);
     })
     this.setState({ milestones: milestone, rows:rowSet });
   }
 
     addMilestone = (milestone) => {
+      console.log("called ........................"+this+" MS:"+milestone)
       this.state.milestones.push(milestone);
-      this.setState({ milestones: this.state.milestones });
-      var dat = new Date(milestone["date"])
-      this.state.rows[dat.getDate()][month_config[dat.getMonth()]+"_val"].push({_id:milestone["_id"], desc:milestone["desc"]})
-      console.log("hinzugefügt, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+milestone["desc"])
-
+      //this.setState({ milestones: this.state.milestones });
+      this.state.rows = this.addRow({_id:milestone["_id"], desc:milestone["desc"], date: milestone["date"]}, this.state.rows);
       //this.addMilestones(this.state.milestones);
+      this.setState({ milestones: this.state.milestones, rows:this.state.rows });
   }
  
   deleteMilestone = (id) => {
