@@ -63,27 +63,32 @@ const year = 2021;
 
 var dialogAction = null;
 
- function FormDialog({obj:addMilestone, change:changeMilestone}) {
+ function FormDialog({obj:addMilestone, change:changeMilestone, mode:formMode}) {
   const [open, setOpen] = React.useState(false);
   const desc = React.useRef("");
   const desc_long = React.useRef("");
   const date = React.useRef(new Date());
   var type = "";
   const formattedDate = React.useRef("2022-01-01")
+  const formDesc = React.useRef("-")
+  const formType = React.useRef("-")
   const addM = addMilestone;
   const chM = changeMilestone;
+  const callBack = formMode == "update"? changeMilestone : addMilestone;
 
   const setTypeVal = (val)=>{
     type = val
   }
 
-  const handleClickOpen = (year, month, day) => {
+  const handleClickOpen = (year, month, day,value=null) => {
+    console.log("------------- Soll geändert werden? "+(value!=null?"Ja":"Nein"))
     day = parseInt(day);
     date.current = new Date(year,month,day);
     var yFixed = ""+year;
     var mFixed = (month < 10 ? "0"+month:""+month); 
     var dFixed = (day < 10? "0"+day:""+day);
    formattedDate.current = yFixed+"-"+mFixed+"-"+dFixed;
+   formDesc.current = value !== null ? value["desc"]:  "";
    console.log("DAtum geparsed: "+yFixed+"-"+mFixed+"-"+dFixed);
     setOpen(true);
   };
@@ -91,50 +96,12 @@ var dialogAction = null;
   openDialog = handleClickOpen;
   const handleCancel = () => {setOpen(false);}
 
-  const handleClose = (addMilestone) => {
+  const handleClose = (callback) => {
     setOpen(false);
     console.log("dialog hat jetzt: "+type)
-  
-
-
-      return new Promise((resolve, reject) => {
-        var hero= { desc:desc.current.value,desc_long : desc_long.current.value, date :date.current.value, type:type}
-               
-        fetch(`${baseAPI}/hero`, {
-          method: 'PUT',
-          body: JSON.stringify(hero),
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json'
-          }
-        })
-        .then(response => response.json())
-        .then((data) => {
-          let cb = addM;
-          let obj = {...hero}
-          console.log("DB Eintrag erfolgt, ID: "+data["ops"])
-           cb(data["ops"][0]); // first element of entered Values (we only enter one)
-        })
-        .catch(err => {
-          reject(err);
-        });
-         
-            /*
-            {
-              "result":{"n":1,"ok":1},
-              "connection":{"id":1,"host":"cosmo-limitd.mongo.cosmos.azure.com","port":10255},
-              "ops":[{"type":"","date":"2021-07-09","desc":"kjkjkj","_id":"613fc9bbcc532698343af1a1"}],
-              "insertedCount":1,
-              "insertedId":"613fc9bbcc532698343af1a1",
-              "n":1,
-              "ok":1
-            }*/
-          
-          
-          
-      });
+    return addMilestoneToDB(desc, desc_long, date, type, addM);
     
-    }
+  }
 
   dialogAction = handleClickOpen;
 
@@ -142,10 +109,10 @@ var dialogAction = null;
     <div>
      
       <Dialog open={open} onClose={handleCancel} aria-labelledby="form-dialog-title">
-        <DialogTitle id="form-dialog-title">Subscribe</DialogTitle>
+        <DialogTitle id="form-dialog-title">Termin Eintragen</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Eintrag bearbeiten.
+            Termin bearbeiten.
           </DialogContentText>
           <TextField
               id="date"
@@ -161,6 +128,7 @@ var dialogAction = null;
           <TextField
             autoFocus
             margin="dense"
+            defaultValue={formDesc.current}
             id="desc"
             label="Beschreibung"
             inputRef={desc}
@@ -175,7 +143,7 @@ var dialogAction = null;
           <Button onClick={handleCancel} color="primary">
             Cancel
           </Button>
-          <Button onClick={(addMilestone)=>{handleClose(addMilestone)}} color="primary">
+          <Button onClick={(callBack)=>{handleClose(callBack)}} color="primary">
             Eintragen
           </Button>
         </DialogActions>
@@ -184,6 +152,32 @@ var dialogAction = null;
   );
 }
  
+
+function addMilestoneToDB(desc, desc_long, date, type, addM,isUpdate=false) {
+  return new Promise((resolve, reject) => {
+    var hero = { desc: desc.current.value, desc_long: desc_long.current.value, date: date.current.value, type: type };
+    var method = isUpdate ? 'POST' : 'PUT'
+    fetch(`${baseAPI}/hero`, {
+      method: method,
+      body: JSON.stringify(hero),
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => response.json())
+      .then((data) => {
+        let cb = addM;
+        let obj = { ...hero };
+        console.log("DB Eintrag erfolgt, ID: " + data["ops"]);
+        cb(data["ops"][0]); // first element of entered Values (we only enter one)
+      })
+      .catch(err => {
+        reject(err);
+      });
+
+  });
+}
 
 function SimpleSelect({callback:setParentType}) {
   const classes = useStyles();
@@ -228,13 +222,14 @@ function handleDelete(id){
 
 }
 
-function CellSet(day, month, year, val, deleteMilestone) {
+function CellSet(day, month, year, val, deleteMilestone, modifyMilestone) {
   var chips = [];
   const classes = useStyles();
   if(val != null){
     for(var i=0;i<val.length;i++){
       var id = val[i]["_id"]; 
-      chips.push(<Chip  p={0} color="primary" size="small" label={val[i]["desc"]}  onDelete={()=>deleteMilestone(id)}/>)
+      let set = val[i];
+      chips.push(<Chip  p={0} color="primary" size="small" label={val[i]["desc"]} onClick={(e)=>{let value = set; dialogAction(year,month,day, value); console.log("richtig mit: "+value.desc); e.stopPropagation()}}  onDelete={()=>deleteMilestone(id)}/>)
     }
   }
   return [
@@ -243,7 +238,7 @@ function CellSet(day, month, year, val, deleteMilestone) {
     {day}
     </TableCell>,
 
-      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day,true)}  p={0} align="left" onClick={()=>{dialogAction(year,month,day)}}>
+      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day,true)}  p={0} align="left" onClick={()=>{console.log("Hääääähhhh");dialogAction(year,month,day)}}>
     {chips}
     </TableCell>
   ]
@@ -254,7 +249,7 @@ function cellStyle(weekday, isContentCol){
   return (weekday.includes("Sa") || weekday.includes("So")) ? {backgroundColor: 'lightgrey', whiteSpace: (isContentCol ? "normal": "nowrap")}:{whiteSpace: (isContentCol ? "normal": "nowrap")}
 }
 
-function DenseTable({value:rowsy, delete:deleteMilestone}) {
+function DenseTable({value:rowsy, delete:deleteMilestone, modify:modifyMilestone}) {
   const classes = useStyles();
   const colSpanTop = 2;
 
@@ -280,18 +275,18 @@ function DenseTable({value:rowsy, delete:deleteMilestone}) {
         <TableBody p={0} >
           {rowsy.map((row) => (
             <TableRow p={0} key={row.id}>
-             {CellSet(row.Jan,1,year,row.Jan_val,deleteMilestone)}
-             {CellSet(row.Feb,2,year,row.Feb_val,deleteMilestone)}
-             {CellSet(row.Mar,3, year,row.Mar_val,deleteMilestone)}
-             {CellSet(row.Apr,4,year, row.Apr_val,deleteMilestone)}
-             {CellSet(row.May,5,year,row.May_val,deleteMilestone)}
-             {CellSet(row.Jun,6,year,row.Jun_val,deleteMilestone)}
-             {CellSet(row.Jul,7,year,row.Jul_val,deleteMilestone)}
-             {CellSet(row.Aug,8,year,row.Aug_val,deleteMilestone)}
-             {CellSet(row.Sep,9,year,row.Sep_val,deleteMilestone)}
-             {CellSet(row.Oct,10,year,row.Oct_val,deleteMilestone)}
-             {CellSet(row.Nov,11,year,row.Nov_val,deleteMilestone)}
-             {CellSet(row.Dec,12,year,row.Dec_val,deleteMilestone)}
+             {CellSet(row.Jan,1,year,row.Jan_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Feb,2,year,row.Feb_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Mar,3, year,row.Mar_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Apr,4,year, row.Apr_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.May,5,year,row.May_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Jun,6,year,row.Jun_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Jul,7,year,row.Jul_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Aug,8,year,row.Aug_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Sep,9,year,row.Sep_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Oct,10,year,row.Oct_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Nov,11,year,row.Nov_val,deleteMilestone,modifyMilestone)}
+             {CellSet(row.Dec,12,year,row.Dec_val,deleteMilestone,modifyMilestone)}
             </TableRow>
           ))}
         </TableBody>
@@ -480,6 +475,28 @@ class App extends React.Component {
     });
 
  }
+
+ modifyMilestone = (id, day, month, year, value) => {
+
+   console.log("called update in REACT -------------------")
+   // addMilestoneToDB(desc, desc_long, date, type, addM);
+
+  /*
+
+  console.log("now deleting: "+id+" with pointer: "+this.state.milestones.length)
+  var filteredMilestones =  this.state.milestones.filter(element => element._id != id)
+  this.addMilestones(filteredMilestones,true);
+  return new Promise((resolve, reject) => {
+    fetch(`${baseAPI}/hero/${id}`, { method: 'DELETE' })
+      .then(response => response.json())
+      .then(json => resolve(json))
+      .catch(err => {
+        reject(err);
+      });
+  });
+  */
+
+}
     
     //this.state.milestones.push(milestone);
     //id in milestones suchen
@@ -502,7 +519,7 @@ changeMilestone = (id) => {}
       <div>
         <Button onClick={()=>{this.btnPush()}}> push me </Button>
     
-       <DenseTable value={this.state.rows} delete={(param)=>{this.deleteMilestone(param)}} />
+       <DenseTable value={this.state.rows} delete={(param)=>{this.deleteMilestone(param)}} modify={(param)=>{this.modifyMilestone(param)}}/>
       
         <ul>
           {

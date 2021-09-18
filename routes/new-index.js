@@ -54,7 +54,8 @@ router.put('/hero', (req, res) => { // create
 
 router.post('/hero', (req, res) => {//update
 	const { id, type, date, desc, desc_long }  = req.body;
-
+	console.log("-------------- CALLED UPDATE ----"+id+" "+desc+" date:"+date);
+/*
 	Hero.findOne({ id })
 		.then(hero => {
 		hero.type = type;
@@ -65,7 +66,7 @@ router.post('/hero', (req, res) => {//update
 		})
 		.catch(err => {
 		res.status(500).send(err);
-		});
+		});*/
 });
 
 router.delete('/hero/:id', (req, res) => {//destroy
