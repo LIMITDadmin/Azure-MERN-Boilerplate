@@ -32,6 +32,33 @@ import MenuItem from '@material-ui/core/MenuItem';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
+import Badge from '@mui/material/Badge';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+
+const Calendar = require('calendar-base').Calendar;
+const cal = new Calendar();
+
+
+
+const theme = createTheme({
+  spacing: 0,
+  padding: 0,
+  palette: {
+    primary: {
+      light: '#757ce8',
+      main: '#3f50b5',
+      dark: '#002884',
+      contrastText: '#fff',
+    },
+    secondary: {
+      light: '#ff7961',
+      main: '#dcf5fd',
+      dark: '#ba000d',
+      contrastText: '#000',
+    },
+  },
+});
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -40,7 +67,7 @@ const useStyles = makeStyles((theme) => ({
   },
   selectEmpty: {
     marginTop: theme.spacing(2),
-  },
+  },  
   table: {
     minWidth: 650,
   },
@@ -56,6 +83,8 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const chipColors = {"SCM":"#C2F3E4","":"#eddbf9", "Marketing":"#FF9F66","other":"#DCF5FD"}
+
 const baseAPI = '/api/data';
 var openDialog = null;
 const year = 2021;
@@ -63,21 +92,25 @@ const year = 2021;
 
 var dialogAction = null;
 
- function FormDialog({obj:addMilestone, change:changeMilestone, mode:formMode}) {
+ function FormDialog({obj:addMilestone, change:changeMilestone}) {
   const [open, setOpen] = React.useState(false);
+  const [isModify, setModify] = React.useState(false);
   const desc = React.useRef("");
+  const id = React.useRef(0);
   const desc_long = React.useRef("");
   const date = React.useRef(new Date());
-  var type = "";
+  var type = React.useRef("-");
   const formattedDate = React.useRef("2022-01-01")
   const formDesc = React.useRef("-")
   const formType = React.useRef("-")
   const addM = addMilestone;
   const chM = changeMilestone;
-  const callBack = formMode == "update"? changeMilestone : addMilestone;
+  const callBack = isModify ? changeMilestone : addMilestone;
 
   const setTypeVal = (val)=>{
-    type = val
+    console.log("bekomme in setTypeVal: "+val)
+    type.current = val
+
   }
 
   const handleClickOpen = (year, month, day,value=null) => {
@@ -88,18 +121,22 @@ var dialogAction = null;
     var mFixed = (month < 10 ? "0"+month:""+month); 
     var dFixed = (day < 10? "0"+day:""+day);
    formattedDate.current = yFixed+"-"+mFixed+"-"+dFixed;
-   formDesc.current = value !== null ? value["desc"]:  "";
-   console.log("DAtum geparsed: "+yFixed+"-"+mFixed+"-"+dFixed);
-    setOpen(true);
+   id.current = value !== null ? value["_id"]: 0;
+   formDesc.current = value !== null ? value["desc"]: "";
+   formType.current = value !== null ? value["type"]: "";
+   type.current = (value !== null ? value["type"]: "");
+   console.log("DAtum geparsed: "+yFixed+"-"+mFixed+"-"+dFixed+" type: "+type.current);
+   setModify(value!==null) //if value is not null, we are modifying existing milestone
+   setOpen(true);
   };
 
   openDialog = handleClickOpen;
   const handleCancel = () => {setOpen(false);}
 
-  const handleClose = (callback) => {
+  const handleClose = (isUpdate) => {
     setOpen(false);
-    console.log("dialog hat jetzt: "+type)
-    return addMilestoneToDB(desc, desc_long, date, type, addM);
+    console.log("dialog hat jetzt: "+type.current)
+    return addMilestoneToDB(desc, desc_long, date, type.current, addM,id.current,isUpdate);
     
   }
 
@@ -109,7 +146,7 @@ var dialogAction = null;
     <div>
      
       <Dialog open={open} onClose={handleCancel} aria-labelledby="form-dialog-title">
-        <DialogTitle id="form-dialog-title">Termin Eintragen</DialogTitle>
+        <DialogTitle id="form-dialog-title">Termin {isModify?"Ändern":"Eintragen"}</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Termin bearbeiten.
@@ -136,15 +173,15 @@ var dialogAction = null;
             fullWidth
           />
 
-       <SimpleSelect callback={setTypeVal}/>
+       <SimpleSelect callback={setTypeVal} defaultType={formType.current}/>
         
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancel} color="primary">
             Cancel
           </Button>
-          <Button onClick={(callBack)=>{handleClose(callBack)}} color="primary">
-            Eintragen
+          <Button onClick={()=>{handleClose(isModify)}} color="primary">
+            {isModify?"Ändern":"Eintragen"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -153,9 +190,15 @@ var dialogAction = null;
 }
  
 
-function addMilestoneToDB(desc, desc_long, date, type, addM,isUpdate=false) {
+function addMilestoneToDB(desc, desc_long, date, type, addM,id=0,isUpdate=false) {
+
+  console.log("Jetzt ist isUpdate noch: "+isUpdate);
   return new Promise((resolve, reject) => {
     var hero = { desc: desc.current.value, desc_long: desc_long.current.value, date: date.current.value, type: type };
+    if(isUpdate){
+      console.log("--- hier hab ich noch die ID: "+id);
+      hero = {_id:id, desc: desc.current.value, desc_long: desc_long.current.value, date: date.current.value, type: type };
+    }
     var method = isUpdate ? 'POST' : 'PUT'
     fetch(`${baseAPI}/hero`, {
       method: method,
@@ -168,9 +211,11 @@ function addMilestoneToDB(desc, desc_long, date, type, addM,isUpdate=false) {
       .then(response => response.json())
       .then((data) => {
         let cb = addM;
+        let doChange = isUpdate?true:false;
+        console.log("an checkpoint 2 ist es nun: "+doChange);
         let obj = { ...hero };
         console.log("DB Eintrag erfolgt, ID: " + data["ops"]);
-        cb(data["ops"][0]); // first element of entered Values (we only enter one)
+        cb(data["ops"][0],doChange); // first element of entered Values (we only enter one)
       })
       .catch(err => {
         reject(err);
@@ -179,9 +224,10 @@ function addMilestoneToDB(desc, desc_long, date, type, addM,isUpdate=false) {
   });
 }
 
-function SimpleSelect({callback:setParentType}) {
+function SimpleSelect({callback:setParentType,defaultType:typePreset}) {
   const classes = useStyles();
-  const [type, setType] = React.useState('');
+  const [type, setType] = React.useState(typePreset!== null?typePreset:'');
+  console.log("Simple Select aufgerufen: "+typePreset)
 
   const handleChange = (event) => {
     setType(event.target.value);
@@ -211,42 +257,66 @@ return(
 
 }
 
-const theme = {
-  spacing: 0,
-  padding: 0,
-}
-
-
 function handleDelete(id){
   console.log("wrong: "+id);
 
 }
 
+function WeekBadge(num, text, isBadge){
+  const result = isBadge? (
+    <div style={{ height:"100%", fontSize:"90%", color:"black", fontStyle:"bold", float:"right", borderRadius:"0px", zIndex:"100", alignContent:"center", borderRight:"1px solid lightgrey"}}><div style={{alignContent:"center", fontSize:"50%"}}>KW</div>{text+""+num}</div>
+  
+  ):text;
+  return result;
+}
+
+function addBadge (inner,daysBetween, doWrap){
+  return (!doWrap ? inner :  <Badge badgeContent={daysBetween} color="secondary"> {inner} </Badge>)
+}
+
 function CellSet(day, month, year, val, deleteMilestone, modifyMilestone) {
   var chips = [];
   const classes = useStyles();
+  const today = new Date();
+  const adjustedMonthToday = today.getMonth()
+  const adjustedMonthReference = month-1; //zero based month
+  const refToday = {year: today.getFullYear(), month: adjustedMonthToday, day: today.getDate()}
+  const refDate = {year: year, month: adjustedMonthReference, day: parseInt(day)}
+  const daysBetween = Calendar.diff(refDate, refToday);
+  const isToday = daysBetween == 0
+
   if(val != null){
+    
     for(var i=0;i<val.length;i++){
       var id = val[i]["_id"]; 
       let set = val[i];
-      chips.push(<Chip  p={0} color="primary" size="small" label={val[i]["desc"]} onClick={(e)=>{let value = set; dialogAction(year,month,day, value); console.log("richtig mit: "+value.desc); e.stopPropagation()}}  onDelete={()=>deleteMilestone(id)}/>)
+      let color = chipColors[val[i]["type"]];
+      chips.push(
+        addBadge(  
+        <Chip  p={0} style={{backgroundColor: color}} size="small" label={val[i]["desc"]} onClick={(e)=>{let value = set; dialogAction(year,month,day, value); console.log("richtig mit: "+value._id); e.stopPropagation()}}  onDelete={()=>deleteMilestone(id)}/>
+        ,daysBetween , i == 0)
+      )
     }
   }
+
+  
   return [
 
-    <TableCell className={ classes.TableCellSizeSmall} style={cellStyle(day,false)}  p={0} align="left"  onClick={()=>{dialogAction(year,month,day)}}>
-    {day}
+    <TableCell className={ classes.TableCellSizeSmall} style={cellStyle(day,false,isToday)}  p={0} align="left"  onClick={()=>{dialogAction(year,month,day)}}>
+      {day}
     </TableCell>,
 
-      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day,true)}  p={0} align="left" onClick={()=>{console.log("Hääääähhhh");dialogAction(year,month,day)}}>
-    {chips}
+      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day,true,isToday)}  p={0} align="left" onClick={()=>{console.log("Hääääähhhh");dialogAction(year,month,day)}}>
+    {chips}    { WeekBadge(Calendar.calculateWeekNumber({year: year, month: adjustedMonthReference, day: parseInt(day)}),"",day.includes("Mo"))} 
     </TableCell>
   ]
 }
 
 
-function cellStyle(weekday, isContentCol){
-  return (weekday.includes("Sa") || weekday.includes("So")) ? {backgroundColor: 'lightgrey', whiteSpace: (isContentCol ? "normal": "nowrap")}:{whiteSpace: (isContentCol ? "normal": "nowrap")}
+function cellStyle(weekday, isContentCol,isToday){
+  let todayColor = "#bfdbf2"
+  
+  return (weekday.includes("Sa") || weekday.includes("So")) ? {backgroundColor: (isToday ? todayColor : 'lightgrey'), whiteSpace: (isContentCol ? "normal": "nowrap")}:{whiteSpace: (isContentCol ? "normal": "nowrap"),  backgroundColor: isToday ? todayColor : ""}
 }
 
 function DenseTable({value:rowsy, delete:deleteMilestone, modify:modifyMilestone}) {
@@ -327,16 +397,6 @@ class App extends React.Component {
    
   
     var rows = this.createRows();
-
-    /*for (var d = startDate; d <= endDate; d.setDate(d.getDate() + 1)) {
-        daysOfYear.push(new Date(d));
-    }*/
-
-   
-    /*for (var r = 0; r < daysOfYear.length;r++) {
-      rows.push( { id: r, title: daysOfYear[r].toLocaleDateString() })
-      
-    }*/
   
 
     this.state = {
@@ -430,7 +490,6 @@ class App extends React.Component {
   addRow = (value, rowSet) => {
     var dat = new Date(value["date"])
     rowSet[dat.getDate()-1][month_config[dat.getMonth()]+"_val"].push(value)
-    console.log("hinzugefügt, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+value["desc"]+"id: "+value["_id"])
     return rowSet;
   }
 
@@ -451,13 +510,15 @@ class App extends React.Component {
     this.setState({ milestones: milestone, rows:rowSet });
   }
 
-    addMilestone = (milestone) => {
-      console.log("called ........................"+this+" MS:"+milestone)
+    addMilestone = (milestone,isUpdate) => {
+      console.log("called ........................ und an checkpoint 3: "+isUpdate)
+      console.log(milestone);
+      if(isUpdate){
+        this.state.milestones = this.state.milestones.filter((obj)=>{return obj["_id"] !== milestone["_id"]});
+        console.log ("trying to remove "+milestone["_id"])
+      }
       this.state.milestones.push(milestone);
-      //this.setState({ milestones: this.state.milestones });
-      this.state.rows = this.addRow({_id:milestone["_id"], desc:milestone["desc"], date: milestone["date"]}, this.state.rows);
-      //this.addMilestones(this.state.milestones);
-      this.setState({ milestones: this.state.milestones, rows:this.state.rows });
+      this.addMilestones(this.state.milestones,true);
   }
  
   deleteMilestone = (id) => {
@@ -476,51 +537,17 @@ class App extends React.Component {
 
  }
 
- modifyMilestone = (id, day, month, year, value) => {
-
-   console.log("called update in REACT -------------------")
-   // addMilestoneToDB(desc, desc_long, date, type, addM);
-
-  /*
-
-  console.log("now deleting: "+id+" with pointer: "+this.state.milestones.length)
-  var filteredMilestones =  this.state.milestones.filter(element => element._id != id)
-  this.addMilestones(filteredMilestones,true);
-  return new Promise((resolve, reject) => {
-    fetch(`${baseAPI}/hero/${id}`, { method: 'DELETE' })
-      .then(response => response.json())
-      .then(json => resolve(json))
-      .catch(err => {
-        reject(err);
-      });
-  });
-  */
-
-}
-    
-    //this.state.milestones.push(milestone);
-    //id in milestones suchen
-    // löschen
-    // update
-    /*this.setState({ milestones: this.state.milestones });
-    var dat = new Date(milestone["date"])
-    this.state.rows[dat.getDate()][month_config[dat.getMonth()]+"_val"].push(milestone["desc"])
-    console.log("hinzugefügt, tag: "+dat.getDate()+" Monat: "+dat.getMonth()+" desc: "+milestone["desc"])
-*/
-    //this.addMilestones(this.state.milestones);
-
-
-changeMilestone = (id) => {}
   
 
   render() {
     console.log("render milestones: ", this.state.milestones)
     return (
+      <ThemeProvider theme={theme}>
       <div>
-        <Button onClick={()=>{this.btnPush()}}> push me </Button>
-    
-       <DenseTable value={this.state.rows} delete={(param)=>{this.deleteMilestone(param)}} modify={(param)=>{this.modifyMilestone(param)}}/>
-      
+       <DenseTable value={this.state.rows} delete={(param)=>{this.deleteMilestone(param)}}/>
+       <FormDialog obj={(obj,isUpdate)=>{this.addMilestone(obj,isUpdate)}} change={(param)=>{this.changeMilestone(param)}} />
+
+      {/*
         <ul>
           {
           
@@ -534,10 +561,11 @@ changeMilestone = (id) => {}
     
                 }
         </ul>
-        
-       <FormDialog obj={(param)=>{this.addMilestone(param)}} change={(param)=>{this.changeMilestone(param)}} />
+         */}
+  
 
       </div> 
+      </ThemeProvider>
     );
   }
 }

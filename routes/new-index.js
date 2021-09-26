@@ -3,6 +3,7 @@ var express = require('express');
 var router = express.Router();
 const Hero = require('./HeroModel');
 const bodyParser = require("body-parser")
+const ObjectID = require('mongodb').ObjectID;
 
 
 
@@ -53,20 +54,29 @@ router.put('/hero', (req, res) => { // create
 });
 
 router.post('/hero', (req, res) => {//update
-	const { id, type, date, desc, desc_long }  = req.body;
-	console.log("-------------- CALLED UPDATE ----"+id+" "+desc+" date:"+date);
-/*
-	Hero.findOne({ id })
-		.then(hero => {
-		hero.type = type;
-		hero.date = date;
-		hero.desc = desc;
-		hero.desc_long = desc_long;
-		hero.save().then(res.json(hero));
-		})
-		.catch(err => {
-		res.status(500).send(err);
-		});*/
+	const { _id, type, date, desc, desc_long }  = req.body;
+	console.log("-------------- CALLED UPDATE ----"+_id+" "+desc+" date:"+date);
+	var objId = new ObjectID(_id);
+	var query = { _id: objId}
+	var newVals = { $set: {desc:desc, type:type, date:date} };
+	console.log("trying to update with query ");
+	console.log(query);
+	console.log(newVals);
+	MongoClient.connect(url, function(err, db) {
+		if (err) throw err;
+		var dbo = db.db("admin");	
+		dbo.collection("heros").updateOne(
+			query,
+			newVals
+			,function(err, result) {
+			if (err) throw err;
+			console.log('Update finished')
+			console.log(result["result"]);
+			res.json({ops:[req.body]}) // to be inline with create return json
+			db.close();
+		});
+	}); 
+	
 });
 
 router.delete('/hero/:id', (req, res) => {//destroy
