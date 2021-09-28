@@ -264,14 +264,32 @@ function handleDelete(id){
 
 function WeekBadge(num, text, isBadge){
   const result = isBadge? (
-    <div style={{ height:"100%", fontSize:"90%", color:"black", fontStyle:"bold", float:"right", borderRadius:"0px", zIndex:"100", alignContent:"center", borderRight:"1px solid lightgrey"}}><div style={{alignContent:"center", fontSize:"50%"}}>KW</div>{text+""+num}</div>
+  
+    <div style={
+      { 
+       display:"inline-block",
+        height:"100%", 
+        fontSize:"90%", 
+        color:"black", 
+        fontStyle:"bold", 
+        borderRadius:"0px",  
+        borderRight:"1px solid lightgrey"
+        }}>
+          <div style={{alignContent:"center", fontSize:"50%"}}>KW</div>{
+          text+""+num}
+          
+          </div>
+      
   
   ):text;
   return result;
 }
 
 function addBadge (inner,daysBetween, doWrap){
-  return (!doWrap ? inner :  <Badge badgeContent={daysBetween} color="secondary"> {inner} </Badge>)
+  return (!doWrap ? inner :  <Badge badgeContent={daysBetween} color="secondary"  anchorOrigin={{
+    vertical: 'top',
+    horizontal: 'left',
+  }}> {inner} </Badge>)
 }
 
 function CellSet(day, month, year, val, deleteMilestone, modifyMilestone) {
@@ -306,9 +324,11 @@ function CellSet(day, month, year, val, deleteMilestone, modifyMilestone) {
       {day}
     </TableCell>,
 
-      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day,true,isToday)}  p={0} align="left" onClick={()=>{console.log("Hääääähhhh");dialogAction(year,month,day)}}>
-    {chips}    { WeekBadge(Calendar.calculateWeekNumber({year: year, month: adjustedMonthReference, day: parseInt(day)}),"",day.includes("Mo"))} 
-    </TableCell>
+      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day,true,isToday)}  p={0} align="right" onClick={()=>{console.log("Hääääähhhh");dialogAction(year,month,day)}}>
+    <div style = {
+      {whiteSpace:"nowrap", align:"right"}
+    }>  {chips}    { WeekBadge(Calendar.calculateWeekNumber({year: year, month: adjustedMonthReference, day: parseInt(day)}),"",day.includes("Mo"))} 
+   </div> </TableCell>
   ]
 }
 
