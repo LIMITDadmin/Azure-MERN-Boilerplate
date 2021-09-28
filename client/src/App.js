@@ -34,6 +34,7 @@ import FormControl from '@material-ui/core/FormControl';
 import Select from '@material-ui/core/Select';
 import Badge from '@mui/material/Badge';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { style } from "@mui/system";
 
 
 const Calendar = require('calendar-base').Calendar;
@@ -53,9 +54,9 @@ const theme = createTheme({
     },
     secondary: {
       light: '#ff7961',
-      main: '#dcf5fd',
+      main: '#000000',
       dark: '#ba000d',
-      contrastText: '#000',
+      contrastText: '#fff',
     },
   },
 });
@@ -286,7 +287,7 @@ function WeekBadge(num, text, isBadge){
 }
 
 function addBadge (inner,daysBetween, doWrap){
-  return (!doWrap ? inner :  <Badge badgeContent={daysBetween} color="secondary"  anchorOrigin={{
+  return (!doWrap ? inner :  <Badge badgeContent={daysBetween} color="secondary" anchorOrigin={{
     vertical: 'top',
     horizontal: 'left',
   }}> {inner} </Badge>)
