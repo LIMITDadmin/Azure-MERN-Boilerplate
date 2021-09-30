@@ -39,6 +39,8 @@ import { style } from "@mui/system";
 
 const Calendar = require('calendar-base').Calendar;
 const cal = new Calendar();
+var startDate = new Date(2021, 0, 1);
+var endDate = new Date(2021, 11, 31);
 
 
 
@@ -116,6 +118,7 @@ var dialogAction = null;
 
   const handleClickOpen = (year, month, day,value=null) => {
     console.log("------------- Soll geändert werden? "+(value!=null?"Ja":"Nein"))
+    month = month +1; //adjust 0 based counting
     day = parseInt(day);
     date.current = new Date(year,month,day);
     var yFixed = ""+year;
@@ -298,11 +301,13 @@ function CellSet(day, month, year, val, deleteMilestone, modifyMilestone) {
   const classes = useStyles();
   const today = new Date();
   const adjustedMonthToday = today.getMonth()
-  const adjustedMonthReference = month-1; //zero based month
+  const adjustedMonthReference = month; 
   const refToday = {year: today.getFullYear(), month: adjustedMonthToday, day: today.getDate()}
   const refDate = {year: year, month: adjustedMonthReference, day: parseInt(day)}
   const daysBetween = Calendar.diff(refDate, refToday);
   const isToday = daysBetween == 0
+
+  if(month < startDate.getMonth()-1 || month > endDate.getMonth()) return null;
 
   if(val != null){
     
@@ -325,7 +330,7 @@ function CellSet(day, month, year, val, deleteMilestone, modifyMilestone) {
       {day}
     </TableCell>,
 
-      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day,true,isToday)}  p={0} align="right" onClick={()=>{console.log("Hääääähhhh");dialogAction(year,month,day)}}>
+      <TableCell className={classes.TableCellSizeSmall} style={cellStyle(day,true,isToday)}  p={0} align="right" onClick={()=>{dialogAction(year,month,day)}}>
     <div style = {
       {whiteSpace:"nowrap", align:"right"}
     }>  {chips}    { WeekBadge(Calendar.calculateWeekNumber({year: year, month: adjustedMonthReference, day: parseInt(day)}),"",day.includes("Mo"))} 
@@ -340,44 +345,37 @@ function cellStyle(weekday, isContentCol,isToday){
   return (weekday.includes("Sa") || weekday.includes("So")) ? {backgroundColor: (isToday ? todayColor : 'lightgrey'), whiteSpace: (isContentCol ? "normal": "nowrap")}:{whiteSpace: (isContentCol ? "normal": "nowrap"),  backgroundColor: isToday ? todayColor : ""}
 }
 
+
+function ColumnSet (){
+  const colSpanTop = 2;
+  var colLIst = []
+  month_long_config.map((val,index)=>{
+    if(index < startDate.getMonth()) return null; //TODO: Add end Date logic
+    colLIst.push(<TableCell p={0}  style={{width: "8%"}}  colSpan={colSpanTop}>{val}</TableCell>);
+  })
+
+  return(
+  <TableRow p={0} >
+   {colLIst}
+  </TableRow>
+  )
+
+}
+
 function DenseTable({value:rowsy, delete:deleteMilestone, modify:modifyMilestone}) {
   const classes = useStyles();
-  const colSpanTop = 2;
+
 
   return (
     <TableContainer component={Paper}>
       <Table size="small" aria-label="Milestone table">
         <TableHead>
-          <TableRow p={0} >
-            <TableCell p={0}  style={{width: "8%"}}  colSpan={colSpanTop}>Januar</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Februar</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>März</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>April</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Mai</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Juni</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Juli</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>August</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>September</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Oktober</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>November</TableCell>
-            <TableCell p={0}  style={{width: "8%"}} colSpan={colSpanTop}>Dezember</TableCell>
-          </TableRow>
+          <ColumnSet />
         </TableHead>
         <TableBody p={0} >
           {rowsy.map((row) => (
-            <TableRow p={0} key={row.id}>
-             {CellSet(row.Jan,1,year,row.Jan_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Feb,2,year,row.Feb_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Mar,3, year,row.Mar_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Apr,4,year, row.Apr_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.May,5,year,row.May_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Jun,6,year,row.Jun_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Jul,7,year,row.Jul_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Aug,8,year,row.Aug_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Sep,9,year,row.Sep_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Oct,10,year,row.Oct_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Nov,11,year,row.Nov_val,deleteMilestone,modifyMilestone)}
-             {CellSet(row.Dec,12,year,row.Dec_val,deleteMilestone,modifyMilestone)}
+            <TableRow >
+            {row.map((cell,index) => (CellSet(cell[0],index,year,cell[1],deleteMilestone,modifyMilestone)))}
             </TableRow>
           ))}
         </TableBody>
@@ -387,19 +385,19 @@ function DenseTable({value:rowsy, delete:deleteMilestone, modify:modifyMilestone
 }
 
 
-const month_config = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr", 
-  "May", 
-  "Jun", 
-  "Jul", 
-  "Aug", 
-  "Sep", 
-  "Oct", 
-  "Nov", 
-  "Dec"
+const month_long_config = [
+"Januar", 
+"Februar",
+"März",
+"April",
+"Mai",,
+"Juni",,
+"Juli",
+"August",
+"September", 
+"Oktober", 
+"November", 
+"Dezember"
 ];
 
 class App extends React.Component {
@@ -409,8 +407,7 @@ class App extends React.Component {
   constructor(props) {
     super(props);
 
-    var startDate = new Date(2021, 0, 1);
-    var endDate = new Date(2021, 11, 31);
+ 
     var daysOfYear = [];
    
 
@@ -461,33 +458,20 @@ class App extends React.Component {
 
         cells.push(value);
       }
-      rows.push({
-        id: cells[0],
-        Jan: cells[1],
-        Feb: cells[2],
-        Mar: cells[3],
-        Apr: cells[4],
-        May: cells[5],
-        Jun: cells[6],
-        Jul: cells[7],
-        Aug: cells[8],
-        Sep: cells[9],
-        Oct: cells[10],
-        Nov: cells[11],
-        Dec: cells[12],
-        Jan_val: [],
-        Feb_val: [],
-        Mar_val: [],
-        Apr_val: [],
-        May_val: [],
-        Jun_val: [],
-        Jul_val: [],
-        Aug_val: [],
-        Sep_val: [],
-        Oct_val: [],
-        Nov_val: [],
-        Dec_val: [],
-      });
+      rows.push([
+        [cells[1],[]],
+        [cells[2],[]],
+        [cells[3],[]],
+        [cells[4],[]],
+        [cells[5],[]],
+        [cells[6],[]],
+        [cells[7],[]],
+        [cells[8],[]],
+        [cells[9],[]],
+        [cells[10],[]],
+        [cells[11],[]],
+        [cells[12],[]],
+      ]);
     }
     return rows;
   }
@@ -510,7 +494,7 @@ class App extends React.Component {
 
   addRow = (value, rowSet) => {
     var dat = new Date(value["date"])
-    rowSet[dat.getDate()-1][month_config[dat.getMonth()]+"_val"].push(value)
+    rowSet[dat.getDate()-1][dat.getMonth()][1].push(value)
     return rowSet;
   }
 
