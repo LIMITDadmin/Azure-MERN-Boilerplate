@@ -39,10 +39,22 @@ import { style } from "@mui/system";
 
 const Calendar = require('calendar-base').Calendar;
 const cal = new Calendar();
-var startDate = new Date(2021, 0, 1);
-var endDate = new Date(2021, 11, 31);
 
+var _startDate = new Date(2021, 3, 1);
+var _endDate = new Date(2022, 5, 31);
+var _monthSpan =  Math.max(
+  (_endDate.getFullYear() - _startDate.getFullYear()) * 12 +
+    _endDate.getMonth() -
+    _startDate.getMonth(),
+  0
+);
+console.log("//////////////// MONATE: "+_monthSpan)
 
+/*
+
+General: 
+To support more than one calendar year, several hacks had been implemented. The amount of months are iterated at several points and to get the calendar year and month, there are modulo and division operations spread all over the place.
+*/
 
 const theme = createTheme({
   spacing: 0,
@@ -307,7 +319,7 @@ function CellSet(day, month, year, val, deleteMilestone, modifyMilestone) {
   const daysBetween = Calendar.diff(refDate, refToday);
   const isToday = daysBetween == 0
 
-  if(month < startDate.getMonth()-1 || month > endDate.getMonth()) return null;
+  /*if(month < _startDate.getMonth()-1 || month > _endDate.getMonth()) return null;*/
 
   if(val != null){
     
@@ -350,8 +362,7 @@ function ColumnSet (){
   const colSpanTop = 2;
   var colLIst = []
   month_long_config.map((val,index)=>{
-    if(index < startDate.getMonth()) return null; //TODO: Add end Date logic
-    colLIst.push(<TableCell p={0}  style={{width: "8%"}}  colSpan={colSpanTop}>{val}</TableCell>);
+        colLIst.push(<TableCell p={0}  style={{width: "8%"}}  colSpan={colSpanTop}>{val}</TableCell>);
   })
 
   return(
@@ -361,7 +372,6 @@ function ColumnSet (){
   )
 
 }
-
 function DenseTable({value:rowsy, delete:deleteMilestone, modify:modifyMilestone}) {
   const classes = useStyles();
 
@@ -375,7 +385,9 @@ function DenseTable({value:rowsy, delete:deleteMilestone, modify:modifyMilestone
         <TableBody p={0} >
           {rowsy.map((row) => (
             <TableRow >
-            {row.map((cell,index) => (CellSet(cell[0],index,year,cell[1],deleteMilestone,modifyMilestone)))}
+            {row.map((cell,index) => (CellSet(cell[0],((index+_startDate.getMonth())%12),year+Math.floor((index+_startDate.getMonth())/12),cell[1],deleteMilestone,modifyMilestone)))
+            //TODO: Find better solution for month/year calculation in second and following years, currently /12 and %12 calculation on all occurences due to continous month-count from start
+            } 
             </TableRow>
           ))}
         </TableBody>
@@ -385,20 +397,19 @@ function DenseTable({value:rowsy, delete:deleteMilestone, modify:modifyMilestone
 }
 
 
-const month_long_config = [
-"Januar", 
-"Februar",
-"März",
-"April",
-"Mai",,
-"Juni",,
-"Juli",
-"August",
-"September", 
-"Oktober", 
-"November", 
-"Dezember"
-];
+const month_long_config = compileHeader(); 
+
+function compileHeader (){
+  var monthList = []
+  for(var i=_startDate.getMonth(); i< _monthSpan+_startDate.getMonth();i++){
+    var dateEntry = new Date(_startDate.getFullYear()+(Math.floor(i/12)), Math.floor(i%12), 1);
+    const options1 = { month: 'short' };
+    var value = "" + dateEntry.toLocaleDateString('de-DE', options1)  
+    monthList.push(value);
+  }
+return monthList;
+}
+
 
 class App extends React.Component {
 
@@ -431,24 +442,29 @@ class App extends React.Component {
 
   createRows() {
     const maxDaysInMonth = 31;
-    const year = 2021;
+    var year = _startDate.getFullYear();
     var rows = [];
+    
 
     var editedValue = "kein wert";
 
     //cycle through days, add new row for each day and empty strings until 31
     for (var curDay = 1; curDay <= maxDaysInMonth; curDay++) {
       var cells = [];
+      var cellset = [];
       cells.push(curDay);
-      for (var curMonth = 0; curMonth < 12; curMonth++) {
+      for (var curMonth = _startDate.getMonth(); curMonth < _monthSpan+_startDate.getMonth(); curMonth++) { // todo: change constant months to span
         //get days in the month
-        var daysInMonth = new Date(year, curMonth + 1, 0).getDate();
+        //todo: fix workaround with year
+        year = _startDate.getFullYear() + Math.floor(curMonth / 12) //add year every 12 months
+        console.log("/// monat: "+Math.floor(curMonth%12)+" year: "+year);
+        var daysInMonth = new Date(year, Math.floor(curMonth%12) + 1, 0).getDate();
         var value = "";
 
 
         if (curDay <= daysInMonth) {
           //add date
-          var dateEntry = new Date(year, curMonth, curDay);
+          var dateEntry = new Date(year, Math.floor(curMonth%12), curDay);
           const options1 = { weekday: 'short' };
           const options2 = { day: 'numeric' };
           value = "" + dateEntry.toLocaleDateString('de-DE', options2) + " " + dateEntry.toLocaleDateString('de-DE', options1);
@@ -457,21 +473,10 @@ class App extends React.Component {
         }
 
         cells.push(value);
+        cellset.push([value,[]]);
       }
-      rows.push([
-        [cells[1],[]],
-        [cells[2],[]],
-        [cells[3],[]],
-        [cells[4],[]],
-        [cells[5],[]],
-        [cells[6],[]],
-        [cells[7],[]],
-        [cells[8],[]],
-        [cells[9],[]],
-        [cells[10],[]],
-        [cells[11],[]],
-        [cells[12],[]],
-      ]);
+      rows.push(cellset);
+      
     }
     return rows;
   }
@@ -494,7 +499,7 @@ class App extends React.Component {
 
   addRow = (value, rowSet) => {
     var dat = new Date(value["date"])
-    rowSet[dat.getDate()-1][dat.getMonth()][1].push(value)
+    rowSet[dat.getDate()-1][dat.getMonth()-_startDate.getMonth()+((dat.getFullYear()-_startDate.getFullYear())*12)][1].push(value) // TODO: better solution for more than one year, currently calculation
     return rowSet;
   }
 
@@ -510,7 +515,16 @@ class App extends React.Component {
     
     milestone.forEach(
       (value, index)=>{
-        rowSet = this.addRow(value, rowSet);
+        var dat = new Date(value["date"])
+      //check if milestone is within displayed time range and quit if not
+      if(
+        dat.getTime() >= _startDate.getTime()
+        && dat.getTime() <= _endDate.getTime()
+        
+        ){
+          rowSet = this.addRow(value, rowSet);
+      }
+        
     })
     this.setState({ milestones: milestone, rows:rowSet });
   }
